@@ -4,9 +4,6 @@ using Dumpling67.Integrations;
 
 namespace Dumpling67.Gameplay.ThirdPerson
 {
-    /// <summary>
-    /// Third-person (Roblox-like): WASD/stick относительно камеры, прыжок с нормальной физикой.
-    /// </summary>
     [RequireComponent(typeof(CharacterController))]
     public class ThirdPersonPlayerController : MonoBehaviour
     {
@@ -18,13 +15,11 @@ namespace Dumpling67.Gameplay.ThirdPerson
         public float rotationSpeed = 14f;
         [Range(0f, 1f)] public float airControl = 0.72f;
 
-        [Header("Jump — высота и тайминги")]
+        [Header("Jump")]
         public float jumpHeight = 1.85f;
         public float coyoteTime = 0.12f;
         public float jumpBuffer = 0.15f;
         public bool allowDoubleJump = true;
-
-        [Header("Jump — гравитация (кривая)")]
         public float jumpUpGravity = 28f;
         public float fallGravity = 48f;
         public float apexGravityScale = 0.55f;
@@ -48,9 +43,7 @@ namespace Dumpling67.Gameplay.ThirdPerson
         public VirtualJoystick moveStick;
         public LookTouchPad lookPad;
 
-        /// <summary>isDouble</summary>
         public event Action<bool> Jumped;
-        /// <summary>impact speed</summary>
         public event Action<float> Landed;
 
         public float VerticalSpeed => _velocity.y;
@@ -71,6 +64,8 @@ namespace Dumpling67.Gameplay.ThirdPerson
         private int _jumpsLeft;
         private bool _wasGrounded;
         private bool _jumpCut;
+        private bool _mobileJumpQueued;
+        private bool _mobileHold;
 
         private void Awake()
         {
@@ -110,6 +105,10 @@ namespace Dumpling67.Gameplay.ThirdPerson
                 _coyoteCounter = 0f;
             }
 
+            if ((ReadJumpReleased() || (!_mobileHold && _jumpCut == false && Input.GetKeyUp(KeyCode.Space))) && _velocity.y > 0f && !_jumpCut)
+            {
+                // jump cut on release handled below via JumpReleased for mobile
+            }
             if (ReadJumpReleased() && _velocity.y > 0f && !_jumpCut)
             {
                 _velocity.y *= jumpCutMultiplier;
@@ -130,7 +129,6 @@ namespace Dumpling67.Gameplay.ThirdPerson
             _velocity.z = planar.z;
             _currentSpeed = planar.magnitude;
 
-            // Gravity curve
             if (grounded && _velocity.y < 0f)
                 _velocity.y = groundedStick;
             else
@@ -141,7 +139,6 @@ namespace Dumpling67.Gameplay.ThirdPerson
                 if (_velocity.y < -maxFallSpeed) _velocity.y = -maxFallSpeed;
             }
 
-            // Rotate toward move
             if (wish.sqrMagnitude > 0.01f)
             {
                 Quaternion targetRot = Quaternion.LookRotation(wish, Vector3.up);
@@ -175,19 +172,34 @@ namespace Dumpling67.Gameplay.ThirdPerson
         {
             if (moveStick != null && moveStick.IsActive)
                 return moveStick.Value;
-            float h = Input.GetAxisRaw("Horizontal");
-            float v = Input.GetAxisRaw("Vertical");
-            return new Vector2(h, v);
+            return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         }
 
         private bool ReadJumpPressed()
         {
+            if (_mobileJumpQueued) { _mobileJumpQueued = false; return true; }
             return Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space);
         }
 
         private bool ReadJumpReleased()
         {
             return Input.GetButtonUp("Jump") || Input.GetKeyUp(KeyCode.Space);
+        }
+
+        public void JumpPressed()
+        {
+            _mobileJumpQueued = true;
+            _mobileHold = true;
+        }
+
+        public void JumpReleased()
+        {
+            _mobileHold = false;
+            if (_velocity.y > 0f && !_jumpCut)
+            {
+                _velocity.y *= jumpCutMultiplier;
+                _jumpCut = true;
+            }
         }
 
         private Vector3 GetCameraRelative(Vector2 input)
@@ -197,7 +209,7 @@ namespace Dumpling67.Gameplay.ThirdPerson
             if (cam == null) return new Vector3(input.x, 0f, input.y).normalized;
             Vector3 forward = cam.forward; forward.y = 0f; forward.Normalize();
             Vector3 right = cam.right; right.y = 0f; right.Normalize();
-            Vector3 dir = (forward * input.y + right * input.x);
+            Vector3 dir = forward * input.y + right * input.x;
             float mag = Mathf.Clamp01(input.magnitude);
             return dir.sqrMagnitude > 0.01f ? dir.normalized * mag : Vector3.zero;
         }
