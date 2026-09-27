@@ -4,9 +4,6 @@ using Dumpling67.Core;
 
 namespace Dumpling67.Integrations
 {
-    /// <summary>
-    /// Мост к VK Bridge / VK Games (реклама, шаринг).
-    /// </summary>
     public class VkGamesBridge : MonoBehaviour
     {
         public static VkGamesBridge Instance { get; private set; }
@@ -37,8 +34,7 @@ namespace Dumpling67.Integrations
 #if UNITY_WEBGL && !UNITY_EDITOR
             try { VkShare(link, text); } catch { }
 #else
-            Debug.Log($"[VK Mock] Share: {text} | {link}");
-            GameEvents.TriggerToast("Пост VK (mock)", "info");
+            Debug.Log($"[VK Mock] Share {link} {text}");
 #endif
         }
 
@@ -51,7 +47,7 @@ namespace Dumpling67.Integrations
         {
             var economy = GameManager.Instance != null ? GameManager.Instance.economy : null;
             if (economy != null) economy.AddCoins(120);
-            GameEvents.TriggerToast("+120 за VK-рекламу (mock)", "success");
+            GameEvents.TriggerToast("+120 за рекламу VK (mock)", "success");
         }
     }
 }

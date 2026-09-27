@@ -5,10 +5,6 @@ using Dumpling67.Core;
 
 namespace Dumpling67.Integrations
 {
-    /// <summary>
-    /// Мост к SDK Яндекс Игр (реклама, лидерборд, данные игрока).
-    /// В Editor — mock. На WebGL — jslib + YaGames.
-    /// </summary>
     public class YandexGamesBridge : MonoBehaviour
     {
         public static YandexGamesBridge Instance { get; private set; }
@@ -66,7 +62,6 @@ namespace Dumpling67.Integrations
 #endif
         }
 
-        // Вызывается из jslib через SendMessage
         public void OnYandexRewarded()
         {
             OnRewardedSuccess?.Invoke();
