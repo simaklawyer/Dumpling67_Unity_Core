@@ -11,16 +11,13 @@ namespace Dumpling67.Core
         public int highScore = 0;
         public string activeSkinId = "p1";
         public List<string> unlockedPelmeniIds = new List<string> { "p1", "p2", "p3" };
-        // FIX: Dictionary не сериализуется JsonUtility (молча теряется при Save/Load).
-        // Инвентарь хранится как List<InventoryEntry>, доступ — через методы ниже.
+        // FIX: Dictionary не сериализуется JsonUtility
         public List<InventoryEntry> inventory = new List<InventoryEntry>();
         public List<string> completedQuestIds = new List<string>();
         public List<QuestProgress> questProgress = new List<QuestProgress>();
         public int totalBoxesOpened = 0;
         public int totalSquishes = 0;
         public long lastDailyResetUnix = 0;
-
-        // --- Inventory helpers (замена Dictionary) ---
 
         public int GetInventoryCount(string pelmenId)
         {

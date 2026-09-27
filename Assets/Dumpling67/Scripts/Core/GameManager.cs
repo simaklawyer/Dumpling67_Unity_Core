@@ -37,9 +37,6 @@ namespace Dumpling67.Core
             DontDestroyOnLoad(gameObject);
             LoadProgress();
 
-            // ВАЖНО: jslib вызывает SendMessage("YandexGamesBridge", ...) / ("VkGamesBridge", ...) /
-            // ("TelegramWebAppBridge", ...) по ТОЧНОМУ имени GameObject'а. Раньше эти объекты
-            // нигде не создавались вручную → на билде реклама/лидерборд/Stars молча не работали.
             EnsureBridge<Integrations.TelegramWebAppBridge>("TelegramWebAppBridge");
             EnsureBridge<Integrations.YandexGamesBridge>("YandexGamesBridge");
             EnsureBridge<Integrations.VkGamesBridge>("VkGamesBridge");
@@ -47,11 +44,6 @@ namespace Dumpling67.Core
             ApplyRuntimePerfDefaults();
         }
 
-        /// <summary>
-        /// Ставится в рантайме — не зависит от URP Asset (которого в этом пакете ещё нет).
-        /// WebGL/браузер не умеет VSync через Unity API — синхронизация всё равно идёт через requestAnimationFrame,
-        /// а масштаб частоты кадров задаём сами.
-        /// </summary>
         private static void ApplyRuntimePerfDefaults()
         {
             QualitySettings.vSyncCount = 0;
