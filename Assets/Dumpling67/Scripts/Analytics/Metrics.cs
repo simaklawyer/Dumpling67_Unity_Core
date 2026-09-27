@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Dumpling67.Analytics
 {
-    /// <summary>
-    /// Лёгкий слой метрик. В Editor/dev — Debug.Log.
-    /// На проде подключите AppMetrica / Amplitude / свой endpoint через IMetricsSink.
-    /// </summary>
     public static class Metrics
     {
         public interface IMetricsSink
@@ -51,8 +47,6 @@ namespace Dumpling67.Analytics
             try { _sink.Track(eventName, props); }
             catch (Exception e) { Debug.LogWarning($"[Metrics] {e.Message}"); }
         }
-
-        // --- Удобные обёртки под продукт ---
 
         public static void SessionStart() =>
             Track("session_start", new Dictionary<string, object> {

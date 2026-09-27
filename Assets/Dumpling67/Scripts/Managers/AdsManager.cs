@@ -28,49 +28,32 @@ namespace Dumpling67.Managers
                 case Platform.Yandex:
                     if (YandexGamesBridge.Instance != null)
                         YandexGamesBridge.Instance.ShowRewardedAd();
-                    else
-                        MockReward();
                     break;
                 case Platform.Vk:
                     if (VkGamesBridge.Instance != null)
-                        VkGamesBridge.Instance.ShowRewarded();
-                    else
-                        MockReward();
+                        VkGamesBridge.Instance.ShowRewardedAd();
                     break;
                 default:
-                    MockReward();
+                    if (YandexGamesBridge.Instance != null)
+                        YandexGamesBridge.Instance.ShowRewardedAd();
                     break;
             }
         }
 
-        public void ShowInterstitial()
+        public void ShowInterstitialSoft()
         {
-            switch (Resolve())
-            {
-                case Platform.Yandex:
-                    YandexGamesBridge.Instance?.ShowInterstitial();
-                    break;
-                case Platform.Vk:
-                    VkGamesBridge.Instance?.ShowInterstitial();
-                    break;
-                default:
-                    Debug.Log("[Ads] Mock interstitial");
-                    break;
-            }
+            if (Resolve() == Platform.Yandex && YandexGamesBridge.Instance != null)
+                YandexGamesBridge.Instance.ShowFullscreenAd();
         }
 
         private Platform Resolve()
         {
             if (preferred != Platform.Auto) return preferred;
-            if (YandexGamesBridge.Instance != null) return Platform.Yandex;
-            if (VkGamesBridge.Instance != null) return Platform.Vk;
+#if UNITY_WEBGL
+            return Platform.Yandex;
+#else
             return Platform.Mock;
-        }
-
-        private void MockReward()
-        {
-            Debug.Log("[Ads] Mock rewarded → +coins");
-            // EconomyManager.Instance?.AddSoft(50);
+#endif
         }
     }
 }

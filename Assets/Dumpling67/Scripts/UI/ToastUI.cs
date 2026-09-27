@@ -1,43 +1,58 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
+using TMPro;
+using Dumpling67.Core;
 
-public class ToastUI : MonoBehaviour
+namespace Dumpling67.UI
 {
-    public static ToastUI Instance { get; private set; }
-
-    [SerializeField] private Text messageText;
-    [SerializeField] private CanvasGroup canvasGroup;
-    [SerializeField] private float displayTime = 2f;
-
-    void Awake()
+    /// <summary>
+    /// Простой toast. Повесь на Canvas и назначь Text + Background.
+    /// </summary>
+    public class ToastUI : MonoBehaviour
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
-        if (canvasGroup != null) canvasGroup.alpha = 0f;
-    }
+        [SerializeField] private TextMeshProUGUI messageText;
+        [SerializeField] private CanvasGroup canvasGroup;
+        [SerializeField] private float displayTime = 2.2f;
 
-    public void Show(string message)
-    {
-        StopAllCoroutines();
-        StartCoroutine(ShowRoutine(message));
-    }
+        private float _timer;
+        private bool _active;
 
-    IEnumerator ShowRoutine(string message)
-    {
-        if (messageText != null) messageText.text = message;
-        if (canvasGroup != null)
+        private void OnEnable()
         {
-            canvasGroup.alpha = 1f;
-            yield return new WaitForSeconds(displayTime);
-            float t = 0f;
-            while (t < 0.5f)
+            GameEvents.OnToastTriggered += ShowToast;
+            if (canvasGroup != null)
             {
-                t += Time.deltaTime;
-                canvasGroup.alpha = 1f - t / 0.5f;
-                yield return null;
+                canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
             }
-            canvasGroup.alpha = 0f;
+        }
+
+        private void OnDisable()
+        {
+            GameEvents.OnToastTriggered -= ShowToast;
+        }
+
+        private void Update()
+        {
+            if (!_active) return;
+
+            _timer -= Time.deltaTime;
+            if (_timer <= 0f)
+            {
+                _active = false;
+                if (canvasGroup != null) canvasGroup.alpha = 0f;
+            }
+        }
+
+        private void ShowToast(string message, string type)
+        {
+            if (messageText != null) messageText.text = message;
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+            }
+            _timer = displayTime;
+            _active = true;
         }
     }
 }
