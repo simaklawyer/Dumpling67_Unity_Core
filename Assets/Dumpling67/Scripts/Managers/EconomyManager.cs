@@ -1,39 +1,48 @@
 using UnityEngine;
+using Dumpling67.Core;
 
-public class EconomyManager : MonoBehaviour
+namespace Dumpling67.Managers
 {
-    public static EconomyManager Instance { get; private set; }
-
-    [SerializeField] private EconomyBalanceSO balance;
-
-    public int SoftCurrency { get; private set; }
-    public int HardCurrency { get; private set; }
-
-    void Awake()
+    public class EconomyManager : MonoBehaviour
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
-        SoftCurrency = balance != null ? balance.startingSoftCurrency : 100;
-        HardCurrency = balance != null ? balance.startingHardCurrency : 10;
-    }
+        private PlayerSaveData _save;
 
-    public void AddSoft(int amount)
-    {
-        SoftCurrency += amount;
-        GameEvents.OnCurrencyChanged?.Invoke(SoftCurrency, HardCurrency);
-    }
+        public int Coins => _save?.coins ?? 0;
+        public int HighScore => _save?.highScore ?? 0;
 
-    public bool SpendSoft(int amount)
-    {
-        if (SoftCurrency < amount) return false;
-        SoftCurrency -= amount;
-        GameEvents.OnCurrencyChanged?.Invoke(SoftCurrency, HardCurrency);
-        return true;
-    }
+        public void Initialize(PlayerSaveData save)
+        {
+            _save = save;
+            GameEvents.TriggerCoinsChanged(_save.coins);
+            GameEvents.TriggerHighScoreUpdated(_save.highScore);
+        }
 
-    public void AddHard(int amount)
-    {
-        HardCurrency += amount;
-        GameEvents.OnCurrencyChanged?.Invoke(SoftCurrency, HardCurrency);
+        public bool TrySpend(int amount)
+        {
+            if (_save == null || _save.coins < amount) return false;
+            _save.coins -= amount;
+            GameEvents.TriggerCoinsChanged(_save.coins);
+            GameEvents.TriggerSave();
+            return true;
+        }
+
+        public void AddCoins(int amount)
+        {
+            if (_save == null || amount <= 0) return;
+            _save.coins += amount;
+            GameEvents.TriggerCoinsChanged(_save.coins);
+            GameEvents.TriggerSave();
+        }
+
+        public void UpdateHighScore(int score)
+        {
+            if (_save == null) return;
+            if (score > _save.highScore)
+            {
+                _save.highScore = score;
+                GameEvents.TriggerHighScoreUpdated(_save.highScore);
+                GameEvents.TriggerSave();
+            }
+        }
     }
 }
